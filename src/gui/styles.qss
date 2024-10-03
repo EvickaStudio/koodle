@@ -1,0 +1,63 @@
+QMainWindow {
+    background-color: #24292e; /* GitHub dark grey */
+    border-radius: 10px;
+}
+
+QWidget {
+    background-color: #24292e; /* GitHub dark grey */
+    border-radius: 10px;
+}
+
+QPushButton {
+    background-color: #2ea44f; /* GitHub green */
+    color: white;
+    border-radius: 10px;
+    padding: 5px 10px;
+}
+
+QPushButton:hover {
+    background-color: #2c974b; /* Slightly darker green */
+}
+
+QPushButton:pressed {
+    background-color: #279f43; /* Even darker green */
+}
+
+QScrollArea {
+    border: none;
+    background-color: #24292e; /* GitHub dark grey */
+    border-radius: 10px;
+}
+
+QScrollBar:vertical {
+    background-color: #2b2b2b; /* Dark grey for scrollbar */
+    width: 12px;
+    margin: 15px 3px 15px 3px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #6a737d; /* Lighter grey for handle */
+    min-height: 20px;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    background: none;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QTextEdit {
+    background-color: #2b2b2b; /* Dark grey for text edit */
+    color: #c9d1d9; /* Light grey text */
+    border: 1px solid #444c56; /* Darker border */
+    border-radius: 10px;
+}
+
+QLabel {
+    color: #c9d1d9; /* Light grey text */
+    border-radius: 10px;
+}
