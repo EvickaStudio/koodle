@@ -1,13 +1,9 @@
-# gui/course_detail.py
-
 from PyQt6 import QtWidgets, QtCore, QtGui
 from .widgets import ImageLoader
-from .download_item_widget import DownloadItemWidget  # Ensure this import is correct
+from .download_item_widget import DownloadItemWidget
 import requests
 import webbrowser
 import threading
-from urllib.parse import urljoin
-
 
 class CourseDetail(QtWidgets.QWidget):
     back_requested = QtCore.pyqtSignal()
@@ -21,18 +17,36 @@ class CourseDetail(QtWidgets.QWidget):
 
     def init_ui(self):
         layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
 
         # Back Button
         back_button = QtWidgets.QPushButton("← Back to Dashboard")
+        back_button.setFixedHeight(40)
+        back_button.setStyleSheet("""
+            QPushButton {
+                background-color: #007acc;
+                color: white;
+                border-radius: 5px;
+                padding: 5px 15px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005a9e;
+            }
+            QPushButton:pressed {
+                background-color: #004080;
+            }
+        """)
         back_button.clicked.connect(self.back_requested.emit)
         layout.addWidget(back_button)
 
         # Course Header with Image
         header = QtWidgets.QHBoxLayout()
+        header.setSpacing(20)
 
         self.image_label = QtWidgets.QLabel()
-        self.image_label.setFixedSize(100, 100)
+        self.image_label.setFixedSize(150, 150)
         self.image_label.setStyleSheet("border-radius: 10px;")
         self.image_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         header.addWidget(self.image_label)
@@ -51,16 +65,17 @@ class CourseDetail(QtWidgets.QWidget):
         # Course Information
         info_layout = QtWidgets.QVBoxLayout()
         shortname = QtWidgets.QLabel(f"<b>{self.course.get('shortname', '')}</b>")
-        shortname.setStyleSheet("font-size: 16px;")
+        shortname.setStyleSheet("color: white; font-size: 18px;")
         fullname = QtWidgets.QLabel(self.course.get("fullname", ""))
-        fullname.setStyleSheet("font-size: 12px;")
+        fullname.setStyleSheet("color: #d4d4d4; font-size: 14px;")
         enrolled = QtWidgets.QLabel(
             f"Enrolled Users: {self.course.get('enrolledusercount', 0)}"
         )
-        enrolled.setStyleSheet("font-size: 12px;")
+        enrolled.setStyleSheet("color: #d4d4d4; font-size: 14px;")
         info_layout.addWidget(shortname)
         info_layout.addWidget(fullname)
         info_layout.addWidget(enrolled)
+        info_layout.addStretch()
         header.addLayout(info_layout)
 
         layout.addLayout(header)
@@ -68,25 +83,51 @@ class CourseDetail(QtWidgets.QWidget):
         # Tab Widget
         self.tabs = QtWidgets.QTabWidget()
         self.tabs.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
+        self.tabs.setStyleSheet("""
+            QTabWidget::pane { 
+                border: 1px solid #444; 
+                background-color: #1e1e1e; 
+                border-radius: 10px;
+            }
+            QTabBar::tab {
+                background: #2c2c2c;
+                color: white;
+                padding: 10px;
+                margin: 2px;
+                border-radius: 5px;
+            }
+            QTabBar::tab:selected {
+                background: #007acc;
+            }
+        """)
         layout.addWidget(self.tabs)
 
         # Overview Tab
         self.overview_tab = QtWidgets.QWidget()
         self.overview_layout = QtWidgets.QVBoxLayout()
-        self.overview_layout.setContentsMargins(0, 0, 0, 0)
+        self.overview_layout.setContentsMargins(15, 15, 15, 15)
         self.overview_tab.setLayout(self.overview_layout)
         self.tabs.addTab(self.overview_tab, "Overview")
 
         # Downloads Tab
         self.downloads_tab = QtWidgets.QWidget()
         self.downloads_layout = QtWidgets.QVBoxLayout()
-        self.downloads_layout.setContentsMargins(0, 0, 0, 0)
+        self.downloads_layout.setContentsMargins(15, 15, 15, 15)
         self.downloads_tab.setLayout(self.downloads_layout)
         self.tabs.addTab(self.downloads_tab, "Downloads")
 
         # Course Overview Content
         self.content_area = QtWidgets.QTextBrowser()
-        self.content_area.setOpenExternalLinks(True)  # Allow opening links in browser
+        self.content_area.setOpenExternalLinks(True)
+        self.content_area.setStyleSheet("""
+            QTextBrowser {
+                background-color: #252526;
+                color: #d4d4d4;
+                border: 1px solid #3c3c3c;
+                border-radius: 10px;
+                padding: 10px;
+            }
+        """)
         self.overview_layout.addWidget(self.content_area)
 
         # Populate Content and Downloads
@@ -169,13 +210,14 @@ class CourseDetail(QtWidgets.QWidget):
             self.populate_downloads_tab()
         else:
             no_downloads_label = QtWidgets.QLabel("No downloadable content available.")
+            no_downloads_label.setStyleSheet("color: #d4d4d4; font-size: 14px;")
             self.downloads_layout.addWidget(no_downloads_label)
 
     def populate_downloads_tab(self):
         # Create a scroll area to hold all download items
         scroll_area = QtWidgets.QScrollArea()
         scroll_area.setWidgetResizable(True)
-        self.downloads_layout.addWidget(scroll_area)
+        scroll_area.setStyleSheet("background-color: #1e1e1e; border: none;")
 
         # Create a widget to contain the download items
         container = QtWidgets.QWidget()
@@ -183,6 +225,7 @@ class CourseDetail(QtWidgets.QWidget):
 
         # Use a vertical layout for the container
         v_layout = QtWidgets.QVBoxLayout()
+        v_layout.setSpacing(10)
         container.setLayout(v_layout)
 
         # Add a DownloadItemWidget for each downloadable item
@@ -197,11 +240,30 @@ class CourseDetail(QtWidgets.QWidget):
 
             # Add the "Open in Browser" button
             open_button = QtWidgets.QPushButton("Open in Browser")
-            open_button.clicked.connect(lambda _, url=fileurl: self.open_in_browser(url))
+            open_button.setFixedHeight(30)
+            open_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #28a745;
+                    color: white;
+                    border-radius: 5px;
+                    padding: 5px 10px;
+                    font-size: 12px;
+                }
+                QPushButton:hover {
+                    background-color: #218838;
+                }
+                QPushButton:pressed {
+                    background-color: #1e7e34;
+                }
+            """)
+            open_button.clicked.connect(
+                lambda _, url=fileurl: self.open_in_browser(url)
+            )
             v_layout.addWidget(open_button)
 
         # Add stretch to push items to the top
         v_layout.addStretch()
+        self.downloads_layout.addWidget(scroll_area)
 
     def handle_download_requested(self, filename, fileurl):
         # Open a standard file dialog to choose the download location
@@ -214,7 +276,7 @@ class CourseDetail(QtWidgets.QWidget):
         if save_path:
             # Start the download in a separate thread
             thread = threading.Thread(
-                target=self.download_file, args=(fileurl, save_path)
+                target=self.download_file, args=(fileurl, save_path), daemon=True
             )
             thread.start()
 
@@ -222,10 +284,21 @@ class CourseDetail(QtWidgets.QWidget):
         try:
             response = requests.get(url, stream=True)
             response.raise_for_status()
+            total_length = response.headers.get('content-length')
+
             with open(save_path, "wb") as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
+                if total_length is None:
+                    f.write(response.content)
+                else:
+                    dl = 0
+                    total_length = int(total_length)
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            dl += len(chunk)
+                            done = int(100 * dl / total_length)
+                            self.update_download_progress(done)
+
             # Notify the user upon successful download
             QtCore.QMetaObject.invokeMethod(
                 self,
@@ -241,6 +314,10 @@ class CourseDetail(QtWidgets.QWidget):
                 QtCore.Qt.ConnectionType.QueuedConnection,
                 QtCore.Q_ARG(str, str(e)),
             )
+
+    def update_download_progress(self, percent):
+        # Could implement a progress bar update here
+        pass  # Placeholder for progress update
 
     @QtCore.pyqtSlot(str)
     def show_download_success(self, save_path):
@@ -266,8 +343,8 @@ class CourseDetail(QtWidgets.QWidget):
     def set_course_image(self, pixmap):
         if not pixmap.isNull():
             pixmap = pixmap.scaled(
-                100,
-                100,
+                150,
+                150,
                 QtCore.Qt.AspectRatioMode.KeepAspectRatio,
                 QtCore.Qt.TransformationMode.SmoothTransformation,
             )
@@ -276,7 +353,7 @@ class CourseDetail(QtWidgets.QWidget):
             self.set_default_image()
 
     def set_default_image(self):
-        pixmap = QtGui.QPixmap(100, 100)
+        pixmap = QtGui.QPixmap(150, 150)
         pixmap.fill(QtGui.QColor("gray"))
         self.image_label.setPixmap(pixmap)
 

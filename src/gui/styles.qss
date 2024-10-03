@@ -1,43 +1,44 @@
+/* General Styles */
 QMainWindow {
-    background-color: #24292e; /* GitHub dark grey */
+    background-color: #1e1e1e;
     border-radius: 10px;
 }
 
 QWidget {
-    background-color: #24292e; /* GitHub dark grey */
+    background-color: #1e1e1e;
     border-radius: 10px;
 }
 
 QPushButton {
-    background-color: #2ea44f; /* GitHub green */
+    background-color: #007acc;
     color: white;
-    border-radius: 10px;
+    border-radius: 5px;
     padding: 5px 10px;
 }
 
 QPushButton:hover {
-    background-color: #2c974b; /* Slightly darker green */
+    background-color: #005a9e;
 }
 
 QPushButton:pressed {
-    background-color: #279f43; /* Even darker green */
+    background-color: #004080;
 }
 
 QScrollArea {
     border: none;
-    background-color: #24292e; /* GitHub dark grey */
+    background-color: #1e1e1e;
     border-radius: 10px;
 }
 
 QScrollBar:vertical {
-    background-color: #2b2b2b; /* Dark grey for scrollbar */
+    background-color: #333333;
     width: 12px;
     margin: 15px 3px 15px 3px;
     border-radius: 5px;
 }
 
 QScrollBar::handle:vertical {
-    background-color: #6a737d; /* Lighter grey for handle */
+    background-color: #555555;
     min-height: 20px;
     border-radius: 5px;
 }
@@ -50,14 +51,195 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: none;
 }
 
-QTextEdit {
-    background-color: #2b2b2b; /* Dark grey for text edit */
-    color: #c9d1d9; /* Light grey text */
-    border: 1px solid #444c56; /* Darker border */
+QTextEdit, QTextBrowser {
+    background-color: #252526;
+    color: #d4d4d4;
+    border: 1px solid #3c3c3c;
     border-radius: 10px;
+    padding: 10px;
 }
 
 QLabel {
-    color: #c9d1d9; /* Light grey text */
+    color: #d4d4d4;
     border-radius: 10px;
 }
+
+/* Sidebar Styles */
+QFrame {
+    background-color: #2c2c2c;
+    border-radius: 10px;
+}
+
+QFrame QPushButton {
+    background-color: #2c2c2c;
+    color: white;
+    text-align: left;
+    padding-left: 20px;
+    font-size: 14px;
+}
+
+QFrame QPushButton:hover {
+    background-color: #3d3d3d;
+}
+
+QFrame QPushButton:pressed {
+    background-color: #1e90ff;
+}
+
+/* Tab Widget Styles */
+QTabWidget::pane { 
+    border: 1px solid #444; 
+    background-color: #1e1e1e; 
+    border-radius: 10px;
+}
+
+QTabBar::tab {
+    background: #2c2c2c;
+    color: white;
+    padding: 10px;
+    margin: 2px;
+    border-radius: 5px;
+}
+
+QTabBar::tab:selected {
+    background: #007acc;
+}
+
+/* Course Tile Styles */
+CourseTile {
+    background-color: #2c2c2c;
+    border-radius: 10px;
+}
+
+CourseTile:hover {
+    background-color: #3d3d3d;
+}
+
+/* Download Button Styles */
+DownloadItemWidget QPushButton {
+    background-color: #28a745;
+    color: white;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+DownloadItemWidget QPushButton:hover {
+    background-color: #218838;
+}
+
+DownloadItemWidget QPushButton:pressed {
+    background-color: #1e7e34;
+}
+
+/* Login Dialog Styles */
+QDialog {
+    background-color: #1e1e1e;
+    border-radius: 10px;
+}
+
+QDialog QLabel {
+    color: white;
+}
+
+QDialog QLineEdit {
+    background-color: #252526;
+    color: #d4d4d4;
+    border: 1px solid #3c3c3c;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+QDialog QLineEdit:focus {
+    border: 1px solid #007acc;
+}
+
+QDialog QPushButton {
+    background-color: #007acc;
+    color: white;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+QDialog QPushButton:hover {
+    background-color: #005a9e;
+}
+
+QDialog QPushButton:pressed {
+    background-color: #004080;
+}
+
+/* Scroll Area Styles */
+QScrollArea {
+    background-color: #1e1e1e;
+    border-radius: 10px;
+}
+
+/* Progress Bar (if implemented later) */
+QProgressBar {
+    border: 1px solid #3c3c3c;
+    border-radius: 5px;
+    text-align: center;
+    color: white;
+}
+
+QProgressBar::chunk {
+    background-color: #007acc;
+    width: 20px;
+}
+
+
+/* General Styles */
+QMainWindow {
+    background-color: #1e1e1e;
+    border-radius: 10px;
+}
+
+QWidget {
+    background-color: #1e1e1e;
+    border-radius: 10px;
+}
+
+QPushButton {
+    background-color: #007acc;
+    color: white;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+QPushButton:hover {
+    background-color: #005a9e;
+}
+
+QPushButton:pressed {
+    background-color: #004080;
+}
+
+QScrollArea {
+    border: none;
+    background-color: #1e1e1e;
+    border-radius: 10px;
+}
+
+QScrollBar:vertical {
+    background-color: #333333;
+    width: 12px;
+    margin: 15px 3px 15px 3px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #555555;
+    min-height: 20px;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    background: none;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QTextEdit, QTextBrowser {
+    background-color: #2525
