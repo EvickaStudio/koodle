@@ -1,3 +1,5 @@
+/* Filename: styles.qss */
+
 /* General Styles */
 QMainWindow {
     background-color: #1e1e1e;
@@ -10,18 +12,19 @@ QWidget {
 }
 
 QPushButton {
-    background-color: #007acc;
+    background-color: #ca3120;
     color: white;
-    border-radius: 5px;
-    padding: 5px 10px;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 14px;
 }
 
 QPushButton:hover {
-    background-color: #005a9e;
+    background-color: #d32121;
 }
 
 QPushButton:pressed {
-    background-color: #004080;
+    background-color: #d32121;
 }
 
 QScrollArea {
@@ -30,24 +33,52 @@ QScrollArea {
     border-radius: 10px;
 }
 
+
+
+/* Scrollbar Styles */
 QScrollBar:vertical {
-    background-color: #333333;
+    border: none;
+    background: #2c2c2c;
     width: 12px;
-    margin: 15px 3px 15px 3px;
-    border-radius: 5px;
+    margin: 15px 0 15px 0;
+    border-radius: 6px;
 }
 
 QScrollBar::handle:vertical {
-    background-color: #555555;
+    background: #007acc;
     min-height: 20px;
-    border-radius: 5px;
+    border-radius: 6px;
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
     background: none;
 }
 
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QScrollBar:horizontal {
+    border: none;
+    background: #2c2c2c;
+    height: 12px;
+    margin: 0 15px 0 15px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #007acc;
+    min-width: 20px;
+    border-radius: 6px;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    border: none;
+    background: none;
+}
+
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
     background: none;
 }
 
@@ -75,7 +106,8 @@ QFrame QPushButton {
     color: white;
     text-align: left;
     padding-left: 20px;
-    font-size: 14px;
+    font-size: 16px;
+    border-radius: 10px;
 }
 
 QFrame QPushButton:hover {
@@ -117,18 +149,34 @@ CourseTile:hover {
 
 /* Download Button Styles */
 DownloadItemWidget QPushButton {
-    background-color: #28a745;
-    color: white;
-    border-radius: 5px;
-    font-size: 12px;
+    border-radius: 10px;
+    font-size: 14px;
 }
 
-DownloadItemWidget QPushButton:hover {
+DownloadItemWidget QPushButton#Download {
+    background-color: #28a745;
+    color: white;
+}
+
+DownloadItemWidget QPushButton#Download:hover {
     background-color: #218838;
 }
 
-DownloadItemWidget QPushButton:pressed {
+DownloadItemWidget QPushButton#Download:pressed {
     background-color: #1e7e34;
+}
+
+DownloadItemWidget QPushButton#OpenInBrowser {
+    background-color: #17a2b8;
+    color: white;
+}
+
+DownloadItemWidget QPushButton#OpenInBrowser:hover {
+    background-color: #138496;
+}
+
+DownloadItemWidget QPushButton#OpenInBrowser:pressed {
+    background-color: #117a8b;
 }
 
 /* Login Dialog Styles */
@@ -146,7 +194,7 @@ QDialog QLineEdit {
     color: #d4d4d4;
     border: 1px solid #3c3c3c;
     border-radius: 5px;
-    padding: 5px;
+    padding: 10px;
 }
 
 QDialog QLineEdit:focus {
@@ -156,8 +204,8 @@ QDialog QLineEdit:focus {
 QDialog QPushButton {
     background-color: #007acc;
     color: white;
-    border-radius: 5px;
-    padding: 5px 10px;
+    border-radius: 10px;
+    padding: 10px 20px;
 }
 
 QDialog QPushButton:hover {
@@ -186,60 +234,3 @@ QProgressBar::chunk {
     background-color: #007acc;
     width: 20px;
 }
-
-
-/* General Styles */
-QMainWindow {
-    background-color: #1e1e1e;
-    border-radius: 10px;
-}
-
-QWidget {
-    background-color: #1e1e1e;
-    border-radius: 10px;
-}
-
-QPushButton {
-    background-color: #007acc;
-    color: white;
-    border-radius: 5px;
-    padding: 5px 10px;
-}
-
-QPushButton:hover {
-    background-color: #005a9e;
-}
-
-QPushButton:pressed {
-    background-color: #004080;
-}
-
-QScrollArea {
-    border: none;
-    background-color: #1e1e1e;
-    border-radius: 10px;
-}
-
-QScrollBar:vertical {
-    background-color: #333333;
-    width: 12px;
-    margin: 15px 3px 15px 3px;
-    border-radius: 5px;
-}
-
-QScrollBar::handle:vertical {
-    background-color: #555555;
-    min-height: 20px;
-    border-radius: 5px;
-}
-
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-    background: none;
-}
-
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-    background: none;
-}
-
-QTextEdit, QTextBrowser {
-    background-color: #2525

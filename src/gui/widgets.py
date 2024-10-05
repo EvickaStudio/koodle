@@ -1,33 +1,65 @@
+# Filename: widgets.py
 from PyQt6 import QtWidgets, QtGui, QtCore
 import requests
 import random
 
-class ImageLoader(QtCore.QThread):
+class ImageCache:
+    _cache = {}
+
+    @classmethod
+    def get(cls, url):
+        return cls._cache.get(url)
+
+    @classmethod
+    def add(cls, url, pixmap):
+        cls._cache[url] = pixmap
+
+class ImageLoaderSignals(QtCore.QObject):
     image_loaded = QtCore.pyqtSignal(QtGui.QPixmap)
 
+class ImageLoaderRunnable(QtCore.QRunnable):
     def __init__(self, url, token):
         super().__init__()
         self.url = f"{url}?token={token}"
+        self.signals = ImageLoaderSignals()
 
+    @QtCore.pyqtSlot()
     def run(self):
         try:
             response = requests.get(self.url, timeout=10)
             response.raise_for_status()
             pixmap = QtGui.QPixmap()
             if pixmap.loadFromData(response.content):
-                print(f"Image loaded successfully from {self.url}")
-                self.image_loaded.emit(pixmap)
+                ImageCache.add(self.url, pixmap)
+                self.signals.image_loaded.emit(pixmap)
             else:
-                print(f"Failed to load image data from {self.url}")
-                # Emit a default pixmap if loading fails
                 pixmap = QtGui.QPixmap(180, 130)
                 pixmap.fill(QtGui.QColor("gray"))
-                self.image_loaded.emit(pixmap)
+                self.signals.image_loaded.emit(pixmap)
         except Exception as e:
             print(f"Failed to load image from {self.url}: {e}")
             pixmap = QtGui.QPixmap(180, 130)
             pixmap.fill(QtGui.QColor("gray"))
-            self.image_loaded.emit(pixmap)
+            self.signals.image_loaded.emit(pixmap)
+
+class ImageLoader(QtCore.QObject):
+    image_loaded = QtCore.pyqtSignal(QtGui.QPixmap)
+
+    def __init__(self, url, token):
+        super().__init__()
+        self.url = url
+        self.token = token
+        self.threadpool = QtCore.QThreadPool.globalInstance()
+
+    def load(self):
+        cached_pixmap = ImageCache.get(f"{self.url}?token={self.token}")
+        if cached_pixmap:
+            self.image_loaded.emit(cached_pixmap)
+            return
+
+        runnable = ImageLoaderRunnable(self.url, self.token)
+        runnable.signals.image_loaded.connect(self.image_loaded.emit)
+        self.threadpool.start(runnable)
 
 class CourseTile(QtWidgets.QWidget):
     clicked = QtCore.pyqtSignal(dict)
@@ -39,7 +71,7 @@ class CourseTile(QtWidgets.QWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.setFixedSize(250, 180)
+        self.setFixedSize(300, 200)  # Increased width for better name visibility
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
 
         # Create layout
@@ -50,7 +82,7 @@ class CourseTile(QtWidgets.QWidget):
 
         # Background Label
         self.background = QtWidgets.QLabel()
-        self.background.setFixedSize(250, 180)
+        self.background.setFixedSize(300, 200)
         self.background.setStyleSheet("border-radius: 10px; background-color: #2c2c2c;")
         self.background.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(self.background)
@@ -59,10 +91,9 @@ class CourseTile(QtWidgets.QWidget):
         if self.course.get("overviewfiles"):
             image_url = self.course["overviewfiles"][0].get("fileurl", "")
             if image_url:
-                print(f"Loading image from {image_url}")
                 self.loader = ImageLoader(image_url, self.token)
                 self.loader.image_loaded.connect(self.set_background_image)
-                self.loader.start()
+                self.loader.load()
             else:
                 self.set_random_background()
         else:
@@ -70,8 +101,8 @@ class CourseTile(QtWidgets.QWidget):
 
         # Overlay for text
         self.overlay = QtWidgets.QWidget(self.background)
-        self.overlay.setGeometry(0, 0, 250, 180)
-        self.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 80); border-radius: 10px;")
+        self.overlay.setGeometry(0, 0, 300, 200)
+        self.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 150); border-radius: 10px;")
 
         overlay_layout = QtWidgets.QVBoxLayout()
         overlay_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignLeft)
@@ -110,44 +141,36 @@ class CourseTile(QtWidgets.QWidget):
 
     def set_background_image(self, pixmap):
         if not pixmap.isNull():
-            print("Setting background image")
             pixmap = pixmap.scaled(
-                250,
-                180,
+                300,
+                200,
                 QtCore.Qt.AspectRatioMode.KeepAspectRatioByExpanding,
                 QtCore.Qt.TransformationMode.SmoothTransformation,
             )
-            # Apply blur effect
-            blurred_pixmap = self.apply_blur_effect(pixmap)
-            self.background.setPixmap(blurred_pixmap)
-            self.background.setStyleSheet("border-radius: 10px;")  # Apply border-radius to the image
+            # Apply rounded corners to pixmap
+            rounded_pixmap = self.apply_rounded_corners(pixmap, 10)
+            self.background.setPixmap(rounded_pixmap)
+            self.background.setStyleSheet("border-radius: 10px;")  # Ensure border-radius is applied
         else:
-            print("Received null pixmap, setting default background")
             self.set_random_background()
 
-    def apply_blur_effect(self, pixmap):
-        # Create a QGraphicsScene to apply the blur effect
-        scene = QtWidgets.QGraphicsScene()
-        item = QtWidgets.QGraphicsPixmapItem(pixmap)
-        scene.addItem(item)
+    def apply_rounded_corners(self, pixmap, radius):
+        size = pixmap.size()
+        rounded = QtGui.QPixmap(size)
+        rounded.fill(QtCore.Qt.GlobalColor.transparent)
 
-        # Apply blur effect
-        blur_effect = QtWidgets.QGraphicsBlurEffect()
-        blur_effect.setBlurRadius(2.0)
-        item.setGraphicsEffect(blur_effect)
-
-        # Render the scene to a new pixmap
-        blurred_pixmap = QtGui.QPixmap(pixmap.size())
-        blurred_pixmap.fill(QtCore.Qt.GlobalColor.transparent)
-        painter = QtGui.QPainter(blurred_pixmap)
-        scene.render(painter)
+        painter = QtGui.QPainter(rounded)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        path = QtGui.QPainterPath()
+        path.addRoundedRect(QtCore.QRectF(0, 0, size.width(), size.height()), radius, radius)
+        painter.setClipPath(path)
+        painter.drawPixmap(0, 0, pixmap)
         painter.end()
 
-        return blurred_pixmap
+        return rounded
 
     def set_random_background(self):
-        print("Setting random background")
-        pixmap = QtGui.QPixmap(250, 180)
+        pixmap = QtGui.QPixmap(300, 200)
         random_color = QtGui.QColor(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         pixmap.fill(random_color)
         self.background.setPixmap(pixmap)

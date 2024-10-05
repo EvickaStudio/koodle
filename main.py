@@ -1,3 +1,4 @@
+# Filename: main.py
 import sys
 import os
 import pickle
@@ -20,11 +21,13 @@ def load_token():
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    app.setStyle("Fusion")
+    # app.setStyle("Fusion")
 
     # Load stylesheet
-    with open("src/gui/styles.qss", "r") as f:
-        app.setStyleSheet(f.read())
+    stylesheet_path = os.path.join(os.path.dirname(__file__), "gui", "styles.qss")
+    if os.path.exists(stylesheet_path):
+        with open(stylesheet_path, "r") as f:
+            app.setStyleSheet(f.read())
 
     moodle_api = MoodleAPI("https://lernraum.th-luebeck.de/")
 

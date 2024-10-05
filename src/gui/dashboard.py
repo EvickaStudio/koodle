@@ -1,6 +1,34 @@
+# Filename: dashboard.py
 from PyQt6 import QtWidgets, QtCore
 from .widgets import CourseTile
 import math
+
+class FetchCoursesSignals(QtCore.QObject):
+    courses_loaded = QtCore.pyqtSignal(list)
+    error = QtCore.pyqtSignal()
+
+class FetchCoursesRunnable(QtCore.QRunnable):
+    def __init__(self, moodle_api):
+        super().__init__()
+        self.moodle_api = moodle_api
+        self.signals = FetchCoursesSignals()
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        try:
+            user_id = self.moodle_api.get_user_id()
+            if user_id is None:
+                self.signals.error.emit()
+                return
+
+            courses = self.moodle_api.get_course(user_id)
+            if courses:
+                self.signals.courses_loaded.emit(courses)
+            else:
+                self.signals.error.emit()
+        except Exception as e:
+            print(f"Error fetching courses: {e}")
+            self.signals.error.emit()
 
 class Dashboard(QtWidgets.QWidget):
     course_selected = QtCore.pyqtSignal(dict)
@@ -10,6 +38,8 @@ class Dashboard(QtWidgets.QWidget):
         self.moodle_api = moodle_api
         self.token = moodle_api.token
         self.init_ui()
+        self.courses = []
+        self.load_courses()
 
     def init_ui(self):
         self.layout = QtWidgets.QVBoxLayout()
@@ -37,18 +67,23 @@ class Dashboard(QtWidgets.QWidget):
         self.grid.setSpacing(20)
         self.container.setLayout(self.grid)
 
-        self.load_courses()
-
     def load_courses(self):
-        courses = self.moodle_api.get_course(self.moodle_api.get_user_id())
-        if not courses:
-            QtWidgets.QMessageBox.warning(self, "Error", "Could not load courses.")
-            return
+        runnable = FetchCoursesRunnable(self.moodle_api)
+        runnable.signals.courses_loaded.connect(self.on_courses_loaded)
+        runnable.signals.error.connect(self.on_error)
+        QtCore.QThreadPool.globalInstance().start(runnable)
 
+    @QtCore.pyqtSlot(list)
+    def on_courses_loaded(self, courses):
         self.courses = courses
-        self.update_grid()
+        self.populate_grid()
 
-    def update_grid(self):
+    @QtCore.pyqtSlot()
+    def on_error(self):
+        QtWidgets.QMessageBox.warning(self, "Error", "Could not load courses.")
+
+    @QtCore.pyqtSlot()
+    def populate_grid(self):
         # Clear existing items in the grid
         while self.grid.count():
             child = self.grid.takeAt(0)
@@ -57,12 +92,12 @@ class Dashboard(QtWidgets.QWidget):
 
         # Determine number of columns based on window width
         available_width = self.scroll.viewport().width()
-        tile_width = 250  # Width of each CourseTile
+        tile_width = 300  # Width of each CourseTile (updated)
         spacing = self.grid.spacing()
         columns = max(1, available_width // (tile_width + spacing))
 
-        # Limit to 3 columns
-        columns = min(columns, 3)
+        # Limit to 4 columns for better display
+        columns = min(columns, 4)
 
         # Populate grid
         row = 0
@@ -81,7 +116,7 @@ class Dashboard(QtWidgets.QWidget):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.update_grid()
+        self.populate_grid()
 
     def on_tile_clicked(self, course):
         self.course_selected.emit(course)
