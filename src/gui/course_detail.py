@@ -46,17 +46,16 @@ class CourseDetail(QtWidgets.QWidget):
         back_button.clicked.connect(self.back_requested.emit)
         layout.addWidget(back_button)
 
-        # Main Content Layout (Image on Left, Text on Right)
+        # Main Content Layout (Image and Info on Top, Content Below)
         main_content = QtWidgets.QHBoxLayout()
         main_content.setSpacing(20)
         layout.addLayout(main_content)
 
         # Image Section
         self.image_label = QtWidgets.QLabel()
-        self.image_label.setFixedSize(250, 250)
-        self.image_label.setStyleSheet("border-radius: 15px;")
+        self.image_label.setFixedSize(150, 150)
+        self.image_label.setStyleSheet("border-radius: 10px;")
         self.image_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        main_content.addWidget(self.image_label)
 
         if self.course.get("overviewfiles"):
             image_url = self.course["overviewfiles"][0].get("fileurl", "")
@@ -71,21 +70,27 @@ class CourseDetail(QtWidgets.QWidget):
 
         # Text Information Section
         info_layout = QtWidgets.QVBoxLayout()
-        info_layout.setSpacing(10)
+        info_layout.setSpacing(5)
 
         shortname = QtWidgets.QLabel(f"<b>{self.course.get('shortname', '')}</b>")
-        shortname.setStyleSheet("color: white; font-size: 22px;")
+        shortname.setStyleSheet("color: white; font-size: 20px;")
         fullname = QtWidgets.QLabel(self.course.get("fullname", ""))
-        fullname.setStyleSheet("color: #d4d4d4; font-size: 16px;")
+        fullname.setStyleSheet("color: #d4d4d4; font-size: 14px;")
         enrolled = QtWidgets.QLabel(
             f"Enrolled Users: {self.course.get('enrolledusercount', 0)}"
         )
-        enrolled.setStyleSheet("color: #d4d4d4; font-size: 16px;")
+        enrolled.setStyleSheet("color: #d4d4d4; font-size: 14px;")
         info_layout.addWidget(shortname)
         info_layout.addWidget(fullname)
         info_layout.addWidget(enrolled)
         info_layout.addStretch()
-        main_content.addLayout(info_layout)
+
+        # Combine Image and Info
+        header_layout = QtWidgets.QHBoxLayout()
+        header_layout.addWidget(self.image_label)
+        header_layout.addLayout(info_layout)
+        header_layout.addStretch()
+        layout.addLayout(header_layout)
 
         # Tab Widget
         self.tabs = QtWidgets.QTabWidget()
@@ -114,7 +119,7 @@ class CourseDetail(QtWidgets.QWidget):
         # Overview Tab
         self.overview_tab = QtWidgets.QWidget()
         self.overview_layout = QtWidgets.QVBoxLayout()
-        self.overview_layout.setContentsMargins(15, 15, 15, 15)
+        self.overview_layout.setContentsMargins(0, 0, 0, 0)
         self.overview_tab.setLayout(self.overview_layout)
         self.tabs.addTab(self.overview_tab, "Overview")
 
@@ -136,9 +141,31 @@ class CourseDetail(QtWidgets.QWidget):
                 border: 1px solid #3c3c3c;
                 border-radius: 10px;
                 padding: 10px;
+                font-size: 14px;
             }
         """
         )
+        # Ensure that the QTextBrowser uses its own CSS styles
+        self.content_area.document().setDefaultStyleSheet(
+            """
+            body {
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                color: #d4d4d4;
+                background-color: #252526;
+            }
+            h1, h2, h3, h4, h5, h6 {
+                color: white;
+            }
+            a {
+                color: #61afef;
+            }
+            p {
+                margin: 5px 0;
+            }
+        """
+        )
+
         self.overview_layout.addWidget(self.content_area)
 
         # Populate Content and Downloads
@@ -205,8 +232,7 @@ class CourseDetail(QtWidgets.QWidget):
                                     }
                                 )
                         elif content.get("type") == "url":
-                            # Optional: Handle downloadable URLs if necessary
-                            pass  # Currently, URLs are handled in the Overview
+                            pass  # Handle downloadable URLs if necessary
 
                 html += "<hr>"
 
@@ -246,6 +272,7 @@ class CourseDetail(QtWidgets.QWidget):
         no_downloads_label = QtWidgets.QLabel("No downloadable content available.")
         no_downloads_label.setStyleSheet("color: #d4d4d4; font-size: 14px;")
         self.downloads_layout.addWidget(no_downloads_label)
+        self.downloads_layout.addStretch()
 
     @QtCore.pyqtSlot()
     def populate_downloads_tab(self):
@@ -261,6 +288,7 @@ class CourseDetail(QtWidgets.QWidget):
         # Use a vertical layout for the container
         v_layout = QtWidgets.QVBoxLayout()
         v_layout.setSpacing(10)
+        v_layout.setContentsMargins(0, 0, 0, 0)
         container.setLayout(v_layout)
 
         # Add a DownloadItemWidget for each downloadable item
@@ -268,8 +296,6 @@ class CourseDetail(QtWidgets.QWidget):
             filename = item["name"]
             fileurl = item["url"]
             filesize = item.get("size", 0)
-            # add one space before filename
-            filename = "   " + filename
             download_widget = DownloadItemWidget(filename, filesize, fileurl)
             download_widget.download_requested.connect(self.handle_download_requested)
             v_layout.addWidget(download_widget)
@@ -326,8 +352,8 @@ class CourseDetail(QtWidgets.QWidget):
             )
 
     def update_download_progress(self, percent):
-        # Could implement a progress bar update here
-        pass  # Placeholder for progress update
+        # Placeholder for progress update
+        pass
 
     @QtCore.pyqtSlot(str)
     def show_download_success(self, save_path):
@@ -343,18 +369,11 @@ class CourseDetail(QtWidgets.QWidget):
             f"An error occurred during download:\n{error_message}",
         )
 
-    def human_readable_size(self, size, decimal_places=2):
-        for unit in ["B", "KB", "MB", "GB", "TB"]:
-            if size < 1024.0:
-                return f"{size:.{decimal_places}f} {unit}"
-            size /= 1024.0
-        return f"{size:.{decimal_places}f} PB"
-
     def set_course_image(self, pixmap):
         if not pixmap.isNull():
             pixmap = pixmap.scaled(
-                250,
-                250,
+                self.image_label.width(),
+                self.image_label.height(),
                 QtCore.Qt.AspectRatioMode.KeepAspectRatio,
                 QtCore.Qt.TransformationMode.SmoothTransformation,
             )
@@ -363,7 +382,7 @@ class CourseDetail(QtWidgets.QWidget):
             self.set_default_image()
 
     def set_default_image(self):
-        pixmap = QtGui.QPixmap(250, 250)
+        pixmap = QtGui.QPixmap(self.image_label.size())
         pixmap.fill(QtGui.QColor("gray"))
         self.image_label.setPixmap(pixmap)
 

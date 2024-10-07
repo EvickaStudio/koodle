@@ -2,6 +2,7 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 import requests
 import random
+import os
 
 
 class ImageCache:
@@ -68,15 +69,17 @@ class ImageLoader(QtCore.QObject):
 
 class CourseTile(QtWidgets.QWidget):
     clicked = QtCore.pyqtSignal(dict)
+    favorite_changed = QtCore.pyqtSignal()
 
-    def __init__(self, course, token, parent=None):
+    def __init__(self, course, token, config, parent=None):
         super().__init__(parent)
         self.course = course
         self.token = token
+        self.config = config
         self.init_ui()
 
     def init_ui(self):
-        self.setFixedSize(300, 200)  # Increased width for better name visibility
+        self.setFixedSize(300, 200)
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
 
         # Create main layout
@@ -171,6 +174,17 @@ class CourseTile(QtWidgets.QWidget):
         data_layout.addWidget(self.fullname)
         data_layout.addWidget(self.enrolled)
 
+        # Favorite button
+        self.favorite_button = QtWidgets.QPushButton(self.background)
+        self.favorite_button.setFixedSize(24, 24)
+        self.favorite_button.move(self.width() - 34, 10)
+        self.favorite_button.setStyleSheet(
+            "background-color: transparent; border: none;"
+        )
+        self.favorite_button.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+        self.update_favorite_status()
+        self.favorite_button.clicked.connect(self.toggle_favorite)
+
         # Load image or apply gradient/background
         if self.course.get("overviewfiles"):
             image_url = self.course["overviewfiles"][0].get("fileurl", "")
@@ -183,7 +197,7 @@ class CourseTile(QtWidgets.QWidget):
         else:
             self.apply_gradient_background()
 
-        # Add mouse event handlers
+        # Event filter to capture clicks
         self.background.installEventFilter(self)
 
     def apply_gradient_background(self):
@@ -255,8 +269,34 @@ class CourseTile(QtWidgets.QWidget):
         return rounded
 
     def eventFilter(self, source, event):
-        if event.type() == QtCore.QEvent.Type.MouseButtonPress:
+        if (
+            source is self.background
+            and event.type() == QtCore.QEvent.Type.MouseButtonPress
+        ):
             if event.button() == QtCore.Qt.MouseButton.LeftButton:
-                self.clicked.emit(self.course)
-                return True
+                # Check if click was on favorite button
+                if not self.favorite_button.geometry().contains(event.pos()):
+                    self.clicked.emit(self.course)
+            return True
         return super().eventFilter(source, event)
+
+    def update_favorite_status(self):
+        if self.course["id"] in self.config.favorites:
+            icon_path = "icons/star_filled_yellow.png"
+        else:
+            icon_path = "icons/star_outline_yellow.png"
+
+        if os.path.exists(icon_path):
+            icon = QtGui.QIcon(icon_path)
+            self.favorite_button.setIcon(icon)
+            self.favorite_button.setIconSize(QtCore.QSize(24, 24))
+        else:
+            self.favorite_button.setIcon(QtGui.QIcon())
+
+    def toggle_favorite(self):
+        if self.course["id"] in self.config.favorites:
+            self.config.remove_favorite(self.course["id"])
+        else:
+            self.config.add_favorite(self.course["id"])
+        self.update_favorite_status()
+        self.favorite_changed.emit()
