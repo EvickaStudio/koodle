@@ -185,6 +185,24 @@ class CourseTile(QtWidgets.QWidget):
         self.update_favorite_status()
         self.favorite_button.clicked.connect(self.toggle_favorite)
 
+        # Update indicator
+        if self.course.get("has_update"):
+            self.update_icon = QtWidgets.QLabel(self.background)
+            self.update_icon.setFixedSize(24, 24)
+            self.update_icon.move(10, 10)
+            self.update_icon.setAttribute(
+                QtCore.Qt.WidgetAttribute.WA_TranslucentBackground
+            )
+            icon_path = "icons/update.png"
+            if os.path.exists(icon_path):
+                icon = QtGui.QIcon(icon_path)
+                pixmap = icon.pixmap(24, 24)
+                self.update_icon.setPixmap(pixmap)
+            else:
+                self.update_icon.setPixmap(QtGui.QPixmap())
+        else:
+            self.update_icon = None
+
         # Load image or apply gradient/background
         if self.course.get("overviewfiles"):
             image_url = self.course["overviewfiles"][0].get("fileurl", "")
