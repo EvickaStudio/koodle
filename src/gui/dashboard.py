@@ -55,7 +55,54 @@ class Dashboard(QtWidgets.QWidget):
         # Scroll Area
         self.scroll = QtWidgets.QScrollArea()
         self.scroll.setWidgetResizable(True)
-        self.scroll.setStyleSheet("background-color: #1e1e1e;")
+        self.scroll.setStyleSheet("""
+            QScrollArea {
+                background-color: #1e1e1e;
+                border-radius: 10px;
+            }
+            QScrollBar:vertical {
+                background: #2c2c2c;
+                # width: 12px;
+                margin: 15px 3px 15px 3px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background: #3c3c3c;
+                min-height: 20px;
+                border-radius: 6px;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                background: #2c2c2c;
+                height: 14px;
+                subcontrol-origin: margin;
+                border-radius: 6px;
+            }
+            QScrollBar:horizontal {
+                background: #2c2c2c;
+                height: 12px;
+                margin: 3px 15px 3px 15px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:horizontal {
+                background: #3c3c3c;
+                min-width: 20px;
+                border-radius: 6px;
+            }
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                background: #2c2c2c;
+                width: 14px;
+                subcontrol-origin: margin;
+                border-radius: 6px;
+            }
+            QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical,
+            QScrollBar::left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
+                background: none;
+            }
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
+            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+                background: none;
+            }
+        """)
         self.layout.addWidget(self.scroll)
 
         # Container widget

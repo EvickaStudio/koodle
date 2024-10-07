@@ -58,40 +58,56 @@ class MainWindow(QtWidgets.QMainWindow):
         sidebar_layout.addWidget(self.logout_button)
 
         # Connect sidebar buttons
-        self.dashboard_button.clicked.connect(self.show_dashboard)
-        self.settings_button.clicked.connect(self.show_settings)
+        self.dashboard_button.clicked.connect(self.open_dashboard_tab)
+        self.settings_button.clicked.connect(self.open_settings_tab)
         self.logout_button.clicked.connect(self.logout)
 
-        # Main content area with stacked layout
-        self.stack = QtWidgets.QStackedWidget()
-        self.stack.setStyleSheet("background-color: #1e1e1e; border-radius: 10px;")
+        # Main content area with QTabWidget
+        self.tab_widget = QtWidgets.QTabWidget()
+        self.tab_widget.setTabsClosable(True)
+        self.tab_widget.setMovable(True)
+        self.tab_widget.setStyleSheet(
+            """
+            /* QTabWidget Pane */
+            QTabWidget::pane { 
+                border: 1px solid #444; 
+                background-color: #1e1e1e; 
+                border-radius: 10px;
+            }
 
-        # Dashboard View
-        self.dashboard = Dashboard(self.moodle_api)
-        self.dashboard.course_selected.connect(self.show_course_detail)
-        self.stack.addWidget(self.dashboard)
+            /* QTabBar Tabs */
+            QTabBar::tab {
+                background: #2c2c2c;
+                color: white;
+                padding: 5px 10px;
+                margin: 2px;
+                border-radius: 5px;
+                min-width: 120px;
+                height: 30px;
+            }
 
-        # Placeholder for Course Detail View
-        self.course_detail = None
+            /* Selected Tab */
+            QTabBar::tab:selected {
+                background: #007acc;
+            }
+        """
+        )
 
-        # Settings View
-        self.settings = SettingsWidget(self.moodle_api)
-        self.settings.settings_saved.connect(self.handle_settings_saved)
-        self.stack.addWidget(self.settings)
-
-        # Add sidebar and stack to main layout
+        # Add QTabWidget to main layout
         main_layout.addWidget(self.sidebar)
-        main_layout.addWidget(self.stack)
+        main_layout.addWidget(self.tab_widget)
 
-        # Initially show Dashboard
-        self.stack.setCurrentWidget(self.dashboard)
+        # Connect tab close signal
+        self.tab_widget.tabCloseRequested.connect(self.close_tab)
+
+        # Open Dashboard tab by default
+        self.open_dashboard_tab()
 
     def get_sidebar_button_style(self):
         return """
             QPushButton {
                 background-color: #2c2c2c;
                 color: white;
-                border: none;
                 text-align: left;
                 padding-left: 20px;
                 font-size: 16px;
@@ -105,35 +121,74 @@ class MainWindow(QtWidgets.QMainWindow):
             }
         """
 
-    def show_dashboard(self):
-        self.stack.setCurrentWidget(self.dashboard)
+    def open_dashboard_tab(self):
+        # Check if Dashboard tab already exists
+        for index in range(self.tab_widget.count()):
+            if self.tab_widget.tabText(index) == "Dashboard":
+                self.tab_widget.setCurrentIndex(index)
+                return
 
-    def show_course_detail(self, course):
-        if self.course_detail:
-            self.stack.removeWidget(self.course_detail)
-            self.course_detail.deleteLater()
+        dashboard = Dashboard(self.moodle_api)
+        dashboard.course_selected.connect(self.open_course_detail_tab)
+        self.tab_widget.addTab(dashboard, "Dashboard")
+        self.tab_widget.setCurrentWidget(dashboard)
 
-        self.course_detail = CourseDetail(self.moodle_api, course, token=self.token)
-        self.course_detail.back_requested.connect(self.show_dashboard)
-        self.stack.addWidget(self.course_detail)
+    def open_settings_tab(self):
+        # Check if Settings tab already exists
+        for index in range(self.tab_widget.count()):
+            if self.tab_widget.tabText(index) == "Settings":
+                self.tab_widget.setCurrentIndex(index)
+                return
 
-        # Transition animation
-        self.stack.setCurrentWidget(self.course_detail)
+        settings = SettingsWidget(self.moodle_api)
+        settings.settings_saved.connect(self.handle_settings_saved)
+        self.tab_widget.addTab(settings, "Settings")
+        self.tab_widget.setCurrentWidget(settings)
 
-    def show_settings(self):
-        self.stack.setCurrentWidget(self.settings)
+    def open_course_detail_tab(self, course):
+        course_name = course.get("shortname", "Course Detail")
+        # Create a unique tab name
+        tab_name = course_name
+        existing_tabs = [
+            self.tab_widget.tabText(i) for i in range(self.tab_widget.count())
+        ]
+        if tab_name in existing_tabs:
+            index = existing_tabs.index(tab_name)
+            self.tab_widget.setCurrentIndex(index)
+            return
+
+        course_detail = CourseDetail(self.moodle_api, course, token=self.token)
+        course_detail.back_requested.connect(self.close_current_tab)
+        self.tab_widget.addTab(course_detail, tab_name)
+        self.tab_widget.setCurrentWidget(course_detail)
+
+    def close_current_tab(self):
+        current_index = self.tab_widget.currentIndex()
+        if current_index != -1:
+            self.tab_widget.removeTab(current_index)
+
+    def close_tab(self, index):
+        # Prevent closing Dashboard and Settings tabs
+        tab_name = self.tab_widget.tabText(index)
+        if tab_name in ["Dashboard", "Settings"]:
+            QtWidgets.QMessageBox.information(
+                self, "Info", f"The '{tab_name}' tab cannot be closed."
+            )
+            return
+        self.tab_widget.removeTab(index)
 
     def handle_settings_saved(self):
         # Optionally, switch back to Dashboard or prompt restart
-        self.show_dashboard()
+        self.open_dashboard_tab()
 
     def logout(self):
         reply = QtWidgets.QMessageBox.question(
             self,
-            'Logout',
+            "Logout",
             "Are you sure you want to logout?",
-            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
-            QtWidgets.QMessageBox.StandardButton.No
+            QtWidgets.QMessageBox.StandardButton.Yes
+            | QtWidgets.QMessageBox.StandardButton.No,
+            QtWidgets.QMessageBox.StandardButton.No,
         )
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             # Remove token and restart the application
@@ -141,3 +196,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 os.remove("token.pkl")
             QtCore.QCoreApplication.quit()
             os.execl(sys.executable, sys.executable, *sys.argv)
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    moodle_api = None  # Replace with actual Moodle API instance
+    token = None  # Replace with actual token
+    main_window = MainWindow(moodle_api, token)
+    main_window.show()
+    sys.exit(app.exec())

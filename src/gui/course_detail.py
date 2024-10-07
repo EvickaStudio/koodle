@@ -6,6 +6,7 @@ import requests
 import webbrowser
 from concurrent.futures import ThreadPoolExecutor
 
+
 class CourseDetail(QtWidgets.QWidget):
     back_requested = QtCore.pyqtSignal()
 
@@ -45,15 +46,17 @@ class CourseDetail(QtWidgets.QWidget):
         back_button.clicked.connect(self.back_requested.emit)
         layout.addWidget(back_button)
 
-        # Course Header with Image
-        header = QtWidgets.QHBoxLayout()
-        header.setSpacing(20)
+        # Main Content Layout (Image on Left, Text on Right)
+        main_content = QtWidgets.QHBoxLayout()
+        main_content.setSpacing(20)
+        layout.addLayout(main_content)
 
+        # Image Section
         self.image_label = QtWidgets.QLabel()
-        self.image_label.setFixedSize(200, 200)
-        self.image_label.setStyleSheet("border-radius: 10px;")
+        self.image_label.setFixedSize(250, 250)
+        self.image_label.setStyleSheet("border-radius: 15px;")
         self.image_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        header.addWidget(self.image_label)
+        main_content.addWidget(self.image_label)
 
         if self.course.get("overviewfiles"):
             image_url = self.course["overviewfiles"][0].get("fileurl", "")
@@ -66,8 +69,10 @@ class CourseDetail(QtWidgets.QWidget):
         else:
             self.set_default_image()
 
-        # Course Information
+        # Text Information Section
         info_layout = QtWidgets.QVBoxLayout()
+        info_layout.setSpacing(10)
+
         shortname = QtWidgets.QLabel(f"<b>{self.course.get('shortname', '')}</b>")
         shortname.setStyleSheet("color: white; font-size: 22px;")
         fullname = QtWidgets.QLabel(self.course.get("fullname", ""))
@@ -80,14 +85,13 @@ class CourseDetail(QtWidgets.QWidget):
         info_layout.addWidget(fullname)
         info_layout.addWidget(enrolled)
         info_layout.addStretch()
-        header.addLayout(info_layout)
-
-        layout.addLayout(header)
+        main_content.addLayout(info_layout)
 
         # Tab Widget
         self.tabs = QtWidgets.QTabWidget()
         self.tabs.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
-        self.tabs.setStyleSheet("""
+        self.tabs.setStyleSheet(
+            """
             QTabWidget::pane { 
                 border: 1px solid #444; 
                 background-color: #1e1e1e; 
@@ -103,7 +107,8 @@ class CourseDetail(QtWidgets.QWidget):
             QTabBar::tab:selected {
                 background: #007acc;
             }
-        """)
+        """
+        )
         layout.addWidget(self.tabs)
 
         # Overview Tab
@@ -123,7 +128,8 @@ class CourseDetail(QtWidgets.QWidget):
         # Course Overview Content
         self.content_area = QtWidgets.QTextBrowser()
         self.content_area.setOpenExternalLinks(True)
-        self.content_area.setStyleSheet("""
+        self.content_area.setStyleSheet(
+            """
             QTextBrowser {
                 background-color: #252526;
                 color: #d4d4d4;
@@ -131,7 +137,8 @@ class CourseDetail(QtWidgets.QWidget):
                 border-radius: 10px;
                 padding: 10px;
             }
-        """)
+        """
+        )
         self.overview_layout.addWidget(self.content_area)
 
         # Populate Content and Downloads
@@ -212,14 +219,14 @@ class CourseDetail(QtWidgets.QWidget):
                 self.content_area,
                 "setHtml",
                 QtCore.Qt.ConnectionType.QueuedConnection,
-                QtCore.Q_ARG(str, html)
+                QtCore.Q_ARG(str, html),
             )
         else:
             QtCore.QMetaObject.invokeMethod(
                 self.content_area,
                 "setText",
                 QtCore.Qt.ConnectionType.QueuedConnection,
-                QtCore.Q_ARG(str, "Could not load course content.")
+                QtCore.Q_ARG(str, "Could not load course content."),
             )
 
         # Populate the Downloads tab
@@ -227,13 +234,11 @@ class CourseDetail(QtWidgets.QWidget):
             QtCore.QMetaObject.invokeMethod(
                 self,
                 "populate_downloads_tab",
-                QtCore.Qt.ConnectionType.QueuedConnection
+                QtCore.Qt.ConnectionType.QueuedConnection,
             )
         else:
             QtCore.QMetaObject.invokeMethod(
-                self,
-                "show_no_downloads",
-                QtCore.Qt.ConnectionType.QueuedConnection
+                self, "show_no_downloads", QtCore.Qt.ConnectionType.QueuedConnection
             )
 
     @QtCore.pyqtSlot()
@@ -263,34 +268,11 @@ class CourseDetail(QtWidgets.QWidget):
             filename = item["name"]
             fileurl = item["url"]
             filesize = item.get("size", 0)
-            # add one space befor filename
+            # add one space before filename
             filename = "   " + filename
             download_widget = DownloadItemWidget(filename, filesize, fileurl)
             download_widget.download_requested.connect(self.handle_download_requested)
             v_layout.addWidget(download_widget)
-
-            # # Add the "Open in Browser" button
-            # open_button = QtWidgets.QPushButton("Open in Browser")
-            # open_button.setFixedHeight(30)
-            # open_button.setStyleSheet("""
-            #     QPushButton {
-            #         background-color: #28a745;
-            #         color: white;
-            #         border-radius: 5px;
-            #         padding: 5px 10px;
-            #         font-size: 12px;
-            #     }
-            #     QPushButton:hover {
-            #         background-color: #218838;
-            #     }
-            #     QPushButton:pressed {
-            #         background-color: #1e7e34;
-            #     }
-            # """)
-            # open_button.clicked.connect(
-            #     lambda _, url=fileurl: self.open_in_browser(url)
-            # )
-            # v_layout.addWidget(open_button)
 
         # Add stretch to push items to the top
         v_layout.addStretch()
@@ -312,7 +294,7 @@ class CourseDetail(QtWidgets.QWidget):
         try:
             response = requests.get(url, stream=True)
             response.raise_for_status()
-            total_length = response.headers.get('content-length')
+            total_length = response.headers.get("content-length")
 
             with open(save_path, "wb") as f:
                 if total_length is None:
@@ -371,8 +353,8 @@ class CourseDetail(QtWidgets.QWidget):
     def set_course_image(self, pixmap):
         if not pixmap.isNull():
             pixmap = pixmap.scaled(
-                200,
-                200,
+                250,
+                250,
                 QtCore.Qt.AspectRatioMode.KeepAspectRatio,
                 QtCore.Qt.TransformationMode.SmoothTransformation,
             )
@@ -381,7 +363,7 @@ class CourseDetail(QtWidgets.QWidget):
             self.set_default_image()
 
     def set_default_image(self):
-        pixmap = QtGui.QPixmap(200, 200)
+        pixmap = QtGui.QPixmap(250, 250)
         pixmap.fill(QtGui.QColor("gray"))
         self.image_label.setPixmap(pixmap)
 
