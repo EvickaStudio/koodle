@@ -332,3 +332,30 @@ QProgressBar::chunk {
     background-color: #007acc;
     width: 20px;
 }
+
+
+/* QTableWidget */
+QTableWidget {
+    background-color: #252526;
+    color: #d4d4d4;
+    border: 1px solid #3c3c3c;
+    gridline-color: #3c3c3c;
+    border-radius: 10px;
+}
+
+QHeaderView::section {
+    background-color: #3c3c3c;
+    color: white;
+    padding: 5px;
+    border: none;
+}
+
+QTableWidget::item {
+    padding: 5px;
+    border: none;
+}
+
+QTableWidget::item:selected {
+    background-color: #007acc;
+    color: white;
+}

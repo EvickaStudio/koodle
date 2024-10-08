@@ -5,7 +5,7 @@ from .download_item_widget import DownloadItemWidget
 import requests
 import webbrowser
 from concurrent.futures import ThreadPoolExecutor
-
+from .grades_overview import GradesOverview
 
 class CourseDetail(QtWidgets.QWidget):
     back_requested = QtCore.pyqtSignal()
@@ -129,6 +129,16 @@ class CourseDetail(QtWidgets.QWidget):
         self.downloads_layout.setContentsMargins(15, 15, 15, 15)
         self.downloads_tab.setLayout(self.downloads_layout)
         self.tabs.addTab(self.downloads_tab, "Downloads")
+
+        # Grades Tab
+        self.grades_tab = QtWidgets.QWidget()
+        self.grades_layout = QtWidgets.QVBoxLayout()
+        self.grades_layout.setContentsMargins(15, 15, 15, 15)
+        self.grades_tab.setLayout(self.grades_layout)
+        self.tabs.addTab(self.grades_tab, "Grades")
+
+        # Populate Grades Tab
+        self.populate_grades_tab()
 
         # Course Overview Content
         self.content_area = QtWidgets.QTextBrowser()
@@ -303,6 +313,11 @@ class CourseDetail(QtWidgets.QWidget):
         # Add stretch to push items to the top
         v_layout.addStretch()
         self.downloads_layout.addWidget(scroll_area)
+
+    def populate_grades_tab(self):
+        self.grades_overview = GradesOverview(self.moodle_api, self.course["id"])
+        self.grades_layout.addWidget(self.grades_overview)
+
 
     def handle_download_requested(self, filename, fileurl):
         # Open a standard file dialog to choose the download location

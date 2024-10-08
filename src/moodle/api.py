@@ -159,7 +159,6 @@ class MoodleAPI:
         )
         return response.json()
 
-
     def get_course(self, user_id: int) -> dict | None:
         """
         Send a post request to retrieve course info based on user id.
@@ -301,6 +300,34 @@ class MoodleAPI:
             f"{self.url}/webservice/rest/server.php", params=params
         )
         return response.json()
+
+    def get_user_grades(self, course_id: int) -> dict | None:
+        """
+        Retrieves the user's grades for a specific course.
+        """
+        if self.token is None:
+            logger.error("Token not set. Please login first.")
+            return None
+
+        wsfunction = "gradereport_user_get_grade_items"
+        params = {
+            "wstoken": self.token,
+            "wsfunction": wsfunction,
+            "courseid": course_id,
+            "userid": self.userid,
+            "moodlewsrestformat": "json",
+        }
+
+        response = self.session.post(
+            f"{self.url}/webservice/rest/server.php", params=params
+        )
+        result = response.json()
+        if "exception" in result:
+            logger.error(
+                f"API Error: {result['exception']} - {result.get('message', '')}"
+            )
+            return None
+        return result
 
     def _post(self, wsfunction: str, additional_params: dict = None) -> dict | None:
         """Send a POST request to the Moodle API with given wsfunction and parameters."""
