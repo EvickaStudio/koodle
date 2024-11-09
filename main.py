@@ -1,4 +1,3 @@
-# Filename: main.py
 import sys
 import os
 import pickle

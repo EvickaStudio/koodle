@@ -110,10 +110,7 @@ class DownloadItemWidget(QtWidgets.QWidget):
         else:
             icon_path = "icons/file_icon.png"
 
-        if os.path.exists(icon_path):
-            return QtGui.QIcon(icon_path)
-        else:
-            return QtGui.QIcon()
+        return QtGui.QIcon(icon_path) if os.path.exists(icon_path) else QtGui.QIcon()
 
     def open_in_browser(self, url):
         QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))

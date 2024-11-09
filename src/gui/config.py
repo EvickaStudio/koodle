@@ -9,7 +9,7 @@ CONFIG_FILE = "config.json"
 class Config:
     def __init__(self):
         self.favorites = []
-        self.course_states = {}  # New addition
+        self.course_states = {}
         self.load()
 
     def load(self):
