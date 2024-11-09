@@ -1,6 +1,9 @@
 # ad
 token.pkl
 test.py
+emailtest.py
+config.json
+*.pyw
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
